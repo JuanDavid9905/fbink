@@ -2207,6 +2207,8 @@ static int
 	// NOTE: Getting UPDATE_DISPLAY_AREA to actually flash seems to be less straightforward than it appears...
 	//       That said, fx_update_full does behave differently than fx_update_partial, despite the lack of flash,
 	//       and it really is what the framework itself uses...
+	// NOTE: Using fx_update_slow instead could be a viable solution,
+	//       c.f., https://github.com/koreader/koreader-base/pull/2481
 	int  rv;
 	bool is_fs = false;
 	if (region.width == vInfo.xres && region.height == vInfo.yres) {
