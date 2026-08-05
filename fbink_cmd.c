@@ -2227,6 +2227,24 @@ int
 
 	// If we're asking to run in daemon mode, that takes precedence over nearly everything.
 	if (is_daemon) {
+		// If we want to use a custom pipe name, honor that...
+		const char* custom_pipe = getenv("FBINK_NAMED_PIPE");
+		if (custom_pipe) {
+			pipe_path = custom_pipe;
+		} else {
+			pipe_path = FBINK_PIPE;
+		}
+
+		// Start by creating our named pipe.
+		// NOTE: You cannot re-use an existing pipe!
+		rv = mkfifo(pipe_path, 0666);
+		if (rv != 0) {
+			PFWARN("mkfifo(%s): %m", pipe_path);
+			// Make sure we won't delete the pipe, in case it's not ours...
+			pipe_path = NULL;
+			goto cleanup;
+		}
+
 		// Fly, little daemon!
 		if (daemonize() != 0) {
 			WARN("Failed to daemonize, aborting");
@@ -2249,24 +2267,6 @@ int
 		}
 		if ((rv = sigaction(SIGQUIT, &new_action, NULL)) != 0) {
 			PFWARN("sigaction (QUIT): %m");
-			goto cleanup;
-		}
-
-		// If we want to use a custom pipe name, honor that...
-		const char* custom_pipe = getenv("FBINK_NAMED_PIPE");
-		if (custom_pipe) {
-			pipe_path = custom_pipe;
-		} else {
-			pipe_path = FBINK_PIPE;
-		}
-
-		// Start by creating our named pipe.
-		// NOTE: You cannot re-use an existing pipe!
-		rv = mkfifo(pipe_path, 0666);
-		if (rv != 0) {
-			PFWARN("mkfifo(%s): %m", pipe_path);
-			// Make sure we won't delete the pipe, in case it's not ours...
-			pipe_path = NULL;
 			goto cleanup;
 		}
 
